@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Download - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">✓ Success!</h4>
+            <p>Your WordPress site content has been generated successfully!</p>
+        </div>
+
+        <h1>Your WXR File is Ready</h1>
+        <p class="lead">Download your WordPress XML (WXR) file and import it into your WordPress site.</p>
+
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">📥 Download Your File</h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="mb-3">Your file is ready to download:</p>
+                <p class="mb-3">
+                    <code>{{ filename }}</code>
+                </p>
+                <a href="/export/download/{{ site.id }}" class="btn btn-success btn-lg">
+                    📥 Download WXR File
+                </a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">📖 How to Import into WordPress</h5>
+            </div>
+            <div class="card-body">
+                <h6>Step 1: Log in to Your WordPress Admin</h6>
+                <p>Go to your WordPress dashboard and log in as an administrator.</p>
+
+                <h6>Step 2: Install & Activate the Importer Plugin</h6>
+                <ol>
+                    <li>Go to <strong>Plugins → Add New</strong></li>
+                    <li>Search for "WordPress Importer"</li>
+                    <li>Click <strong>Install Now</strong> and then <strong>Activate</strong></li>
+                </ol>
+
+                <h6>Step 3: Access the Import Tool</h6>
+                <ol>
+                    <li>Go to <strong>Tools → Import</strong></li>
+                    <li>Under "WordPress", click <strong>Run Importer</strong></li>
+                </ol>
+
+                <h6>Step 4: Upload Your WXR File</h6>
+                <ol>
+                    <li>Click <strong>Choose File</strong> and select the WXR file you just downloaded</li>
+                    <li>Click <strong>Upload file and import</strong></li>
+                </ol>
+
+                <h6>Step 5: Map Authors</h6>
+                <p>When prompted, you can either:</p>
+                <ul>
+                    <li><strong>Create new authors:</strong> Creates the author account from the WXR file</li>
+                    <li><strong>Map to existing authors:</strong> Assign posts to an existing WordPress user</li>
+                </ul>
+
+                <h6>Step 6: Import Complete</h6>
+                <p>Your pages will now be imported into WordPress! You can then:</p>
+                <ul>
+                    <li>Edit pages and customize the design</li>
+                    <li>Adjust menus and page hierarchy</li>
+                    <li>Add additional content</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">⚠️ Important Notes</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li><strong>Your profile picture and gallery images:</strong> Will be imported as attachments and referenced in the content. Make sure your WordPress site allows file uploads.</li>
+                    <li><strong>Author field:</strong> The author is set to <code>{{ site.step1_data.email if site.step1_data else 'your-email' }}</code>. If this user doesn't exist in WordPress, you'll be prompted to map it to an existing user.</li>
+                    <li><strong>Pages created:</strong> Home, Publications (if applicable), and Gallery (if applicable)</li>
+                    <li><strong>This is a one-time import:</strong> If you regenerate your WXR file and import again, you may create duplicate content. Plan accordingly.</li>
+                    <li><strong>WordPress version:</strong> This WXR file should work with WordPress 4.0 and later.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">ℹ️ What Was Generated</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Site Name:</strong> {{ site.site_name }}</p>
+                <p><strong>Home Page:</strong> Contains your personal information, biography, and profile picture (if uploaded)</p>
+                {% if has_publications %}
+                    <p><strong>Publications Page:</strong> Contains your BibTeX formatted publications</p>
+                {% endif %}
+                {% if has_gallery %}
+                    <p><strong>Gallery Page:</strong> Contains your uploaded gallery images</p>
+                {% endif %}
+                <p><strong>Author:</strong> {{ site.step1_data.email if site.step1_data else 'your-email' }}</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-between">
+            <a href="/" class="btn btn-secondary btn-lg">Back to Dashboard</a>
+            <div>
+                <a href="/export/download/{{ site.id }}" class="btn btn-success btn-lg">
+                    📥 Download WXR File
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

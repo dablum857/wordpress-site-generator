@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Step 4: Gallery - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <!-- Step Indicator -->
+        <div class="step-indicator mb-4">
+            <div class="step completed">
+                <div class="h5">1</div>
+                <small>Personal Info</small>
+            </div>
+            <div class="step completed">
+                <div class="h5">2</div>
+                <small>Biography</small>
+            </div>
+            <div class="step completed">
+                <div class="h5">3</div>
+                <small>Publications</small>
+            </div>
+            <div class="step active">
+                <div class="h5">4</div>
+                <small>Gallery</small>
+            </div>
+            <div class="step">
+                <div class="h5">5</div>
+                <small>Preview</small>
+            </div>
+        </div>
+
+        <h1>Step 4: Images & Gallery</h1>
+        <p class="lead">Upload a profile picture and optional gallery images for your WordPress site.</p>
+
+        <form method="POST" action="/wizard/{{ site.id }}/step/4" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-section">
+                <h3>Profile Picture</h3>
+                <p class="text-muted">Upload a professional photo of yourself to display on your site's home page.</p>
+                
+                {% if current_profile %}
+                    <div class="alert alert-info">
+                        <strong>Current Profile Picture:</strong>
+                        <div class="mt-2">
+                            <img src="/uploads/{{ site.id }}/{{ current_profile }}" alt="Profile Picture" style="max-width: 150px; border-radius: 8px;">
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="form-group mb-3">
+                    {{ form.profile_picture.label(class="form-label") }}
+                    {% if form.profile_picture.errors %}
+                        {{ form.profile_picture(class="form-control is-invalid") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.profile_picture.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.profile_picture(class="form-control", accept="image/*") }}
+                    {% endif %}
+                    <small class="form-text text-muted">Accepted formats: JPG, PNG, GIF, WebP (max 50MB)</small>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Gallery Images</h3>
+                <p class="text-muted">Upload additional images to create a gallery page on your site.</p>
+                
+                {% if current_gallery %}
+                    <div class="alert alert-info">
+                        <strong>Current Gallery Images ({{ current_gallery|length }}):</strong>
+                        <div class="row mt-2">
+                            {% for img in current_gallery %}
+                                <div class="col-md-3 mb-2">
+                                    <img src="/uploads/{{ site.id }}/{{ img }}" alt="Gallery Image" style="max-width: 100%; border-radius: 8px;">
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="form-group mb-3">
+                    {{ form.gallery_images.label(class="form-label") }}
+                    {% if form.gallery_images.errors %}
+                        {{ form.gallery_images(class="form-control is-invalid", accept="image/*") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.gallery_images.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.gallery_images(class="form-control", accept="image/*") }}
+                    {% endif %}
+                    <small class="form-text text-muted">You can select multiple images. Accepted formats: JPG, PNG, GIF, WebP (max 50MB each)</small>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <strong>Note:</strong> Both profile picture and gallery images are optional. You can proceed without uploading any images.
+            </div>
+
+            <div class="d-flex gap-2 justify-content-between">
+                <div>
+                    <a href="/wizard/{{ site.id }}/step/3" class="btn btn-secondary">Back</a>
+                </div>
+                <div>
+                    {{ form.save_draft(class="btn btn-outline-primary") }}
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

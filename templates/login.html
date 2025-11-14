@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Login - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h2 class="mb-0">Login Required</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">You need to be authenticated to use this application.</p>
+                <p>This application uses your institutional credentials (REMOTE_USER) for authentication, which are typically provided by your web server (Apache, Nginx, etc.) configured with Kerberos, Shibboleth, or SAML authentication.</p>
+                
+                <div class="alert alert-info">
+                    <strong>Authentication Methods Supported:</strong>
+                    <ul>
+                        <li>Kerberos</li>
+                        <li>Shibboleth</li>
+                        <li>SAML</li>
+                        <li>Any system that sets REMOTE_USER environment variable</li>
+                    </ul>
+                </div>
+
+                <p>If you are already logged in to your institution's network, please refresh this page.</p>
+                <p>If you are not authenticated, contact your system administrator to ensure your web server is properly configured.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

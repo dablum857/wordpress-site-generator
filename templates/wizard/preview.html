@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Preview - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <!-- Step Indicator -->
+        <div class="step-indicator mb-4">
+            <div class="step completed">
+                <div class="h5">1</div>
+                <small>Personal Info</small>
+            </div>
+            <div class="step completed">
+                <div class="h5">2</div>
+                <small>Biography</small>
+            </div>
+            <div class="step completed">
+                <div class="h5">3</div>
+                <small>Publications</small>
+            </div>
+            <div class="step completed">
+                <div class="h5">4</div>
+                <small>Gallery</small>
+            </div>
+            <div class="step active">
+                <div class="h5">5</div>
+                <small>Preview</small>
+            </div>
+        </div>
+
+        <h1>Preview Your WordPress Site</h1>
+        <p class="lead">Review the content that will be generated for your WordPress site.</p>
+
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
+                    Home Page
+                </button>
+            </li>
+            {% if publications %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="publications-tab" data-bs-toggle="tab" data-bs-target="#publications" type="button" role="tab" aria-controls="publications" aria-selected="false">
+                        Publications
+                    </button>
+                </li>
+            {% endif %}
+            {% if gallery_images %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab" aria-controls="gallery" aria-selected="false">
+                        Gallery
+                    </button>
+                </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content">
+            <!-- Home Page Tab -->
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Home Page Preview</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if step1_data.profile_picture %}
+                            <div class="text-center mb-4">
+                                <img src="/uploads/{{ site.id }}/{{ step1_data.profile_picture }}" alt="Profile Picture" style="max-width: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            </div>
+                        {% endif %}
+
+                        {% if step1_data.title_role %}
+                            <h2>{{ step1_data.title_role }}</h2>
+                        {% endif %}
+
+                        <div class="contact-info my-4 p-3 bg-light rounded">
+                            {% if step1_data.department %}
+                                <p><strong>Department:</strong> {{ step1_data.department }}</p>
+                            {% endif %}
+                            {% if step1_data.field_of_study %}
+                                <p><strong>Field of Study:</strong> {{ step1_data.field_of_study }}</p>
+                            {% endif %}
+                            {% if step1_data.email %}
+                                <p><strong>Email:</strong> <a href="mailto:{{ step1_data.email }}">{{ step1_data.email }}</a></p>
+                            {% endif %}
+                            {% if step1_data.office_address %}
+                                <p><strong>Office:</strong> {{ step1_data.office_address }}</p>
+                            {% endif %}
+                            {% if step1_data.phone_number %}
+                                <p><strong>Phone:</strong> {{ step1_data.phone_number }}</p>
+                            {% endif %}
+                        </div>
+
+                        {% if step2_data.biography %}
+                            <h3>About</h3>
+                            <p>{{ step2_data.biography }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publications Tab -->
+            {% if publications %}
+                <div class="tab-pane fade" id="publications" role="tabpanel" aria-labelledby="publications-tab">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Publications Page Preview</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2>Publications</h2>
+                            <ol>
+                                {% for pub in publications %}
+                                    <li>
+                                        {% if pub.get('author') %}{{ pub['author'] }}.{% endif %}
+                                        {% if pub.get('title') %} "{{ pub['title'] }}."{% endif %}
+                                        {% if pub.get('journal') %} <em>{{ pub['journal'] }}</em>{% elif pub.get('booktitle') %} In <em>{{ pub['booktitle'] }}</em>{% endif %}
+                                        {% if pub.get('publisher') %} {{ pub['publisher'] }}{% endif %}
+                                        {% if pub.get('year') %} ({{ pub['year'] }}){% endif %}
+                                        {% if pub.get('doi') %} <a href="https://doi.org/{{ pub['doi'] }}" target="_blank">DOI</a>{% elif pub.get('url') %} <a href="{{ pub['url'] }}" target="_blank">Link</a>{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Gallery Tab -->
+            {% if gallery_images %}
+                <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Gallery Page Preview</h5>
+                        </div>
+                        <div class="card-body">
+                            <h2>Gallery</h2>
+                            <div class="row">
+                                {% for img in gallery_images %}
+                                    <div class="col-md-4 mb-3">
+                                        <img src="/uploads/{{ site.id }}/{{ img }}" alt="Gallery Image" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-4">
+            <div class="alert alert-info">
+                <strong>What happens next:</strong>
+                <p class="mb-0">Click "Generate & Download WXR File" to create your WordPress import file. You will then be able to download it and import it into your WordPress site.</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-between">
+            <div>
+                <a href="/wizard/{{ site.id }}/step/4" class="btn btn-secondary">Back to Edit</a>
+            </div>
+            <div>
+                <a href="/export/generate/{{ site.id }}" class="btn btn-success btn-lg">
+                    Generate & Download WXR File
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

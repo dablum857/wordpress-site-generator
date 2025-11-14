@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Site - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <h1>Create New WordPress Site</h1>
+        <p class="lead">Start by giving your WordPress site a name.</p>
+
+        <form method="POST" action="/site/new" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-group mb-3">
+                {{ form.site_name.label(class="form-label") }}
+                {% if form.site_name.errors %}
+                    {{ form.site_name(class="form-control is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.site_name.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.site_name(class="form-control", placeholder="e.g., My Faculty Homepage") }}
+                {% endif %}
+                <small class="form-text text-muted">Choose a descriptive name for your WordPress site.</small>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="/" class="btn btn-secondary">Cancel</a>
+                {{ form.submit(class="btn btn-primary btn-lg") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Error - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">⚠️ Error Occurred</h4>
+            <p>{{ error_message | default('An unexpected error has occurred.') }}</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Error Details</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Error Code:</strong> {{ error_code | default('Unknown') }}</p>
+                <p><strong>Status:</strong> {{ status_code | default('500') }}</p>
+                {% if error_details %}
+                    <p><strong>Details:</strong> {{ error_details }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h4>What can you do?</h4>
+            <ul>
+                <li><a href="/">Return to Dashboard</a></li>
+                <li><a href="/site/select">Select Another Site</a></li>
+                <li><a href="/site/new">Create a New Site</a></li>
+                <li>Contact support if the problem persists</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

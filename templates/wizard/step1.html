@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Step 1: Personal Information - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <!-- Step Indicator -->
+        <div class="step-indicator mb-4">
+            <div class="step active">
+                <div class="h5">1</div>
+                <small>Personal Info</small>
+            </div>
+            <div class="step">
+                <div class="h5">2</div>
+                <small>Biography</small>
+            </div>
+            <div class="step">
+                <div class="h5">3</div>
+                <small>Publications</small>
+            </div>
+            <div class="step">
+                <div class="h5">4</div>
+                <small>Gallery</small>
+            </div>
+            <div class="step">
+                <div class="h5">5</div>
+                <small>Preview</small>
+            </div>
+        </div>
+
+        <h1>Step 1: Personal Information</h1>
+        <p class="lead">Tell us about yourself. This information will appear on your WordPress site's home page.</p>
+
+        <form method="POST" action="/wizard/{{ site.id }}/step/1" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-section">
+                <h3>Name</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            {{ form.first_name.label(class="form-label") }}
+                            {% if form.first_name.errors %}
+                                {{ form.first_name(class="form-control is-invalid") }}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.first_name.errors %}{{ error }}<br>{% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.first_name(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {% if form.last_name.errors %}
+                                {{ form.last_name(class="form-control is-invalid") }}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.last_name.errors %}{{ error }}<br>{% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.last_name(class="form-control") }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Professional Information</h3>
+                <div class="form-group mb-3">
+                    {{ form.title_role.label(class="form-label") }}
+                    {% if form.title_role.errors %}
+                        {{ form.title_role(class="form-control is-invalid") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title_role.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.title_role(class="form-control", placeholder="e.g., Associate Professor") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    {{ form.department.label(class="form-label") }}
+                    {% if form.department.errors %}
+                        {{ form.department(class="form-control is-invalid") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.department.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.department(class="form-control", placeholder="e.g., Department of Physics") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    {{ form.field_of_study.label(class="form-label") }}
+                    {% if form.field_of_study.errors %}
+                        {{ form.field_of_study(class="form-control is-invalid") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.field_of_study.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.field_of_study(class="form-control", placeholder="e.g., Quantum Physics") }}
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Contact Information</h3>
+                <div class="form-group mb-3">
+                    {{ form.email.label(class="form-label") }}
+                    {% if form.email.errors %}
+                        {{ form.email(class="form-control is-invalid", type="email") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.email.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.email(class="form-control", type="email") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    {{ form.office_address.label(class="form-label") }}
+                    {% if form.office_address.errors %}
+                        {{ form.office_address(class="form-control is-invalid", rows="3") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.office_address.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.office_address(class="form-control", rows="3", placeholder="Building Name, Room Number, MIT Campus") }}
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    {{ form.phone_number.label(class="form-label") }}
+                    {% if form.phone_number.errors %}
+                        {{ form.phone_number(class="form-control is-invalid") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.phone_number.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.phone_number(class="form-control", placeholder="(Optional)") }}
+                    {% endif %}
+                    <small class="form-text text-muted">Optional field</small>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-between">
+                <a href="/" class="btn btn-secondary">Cancel</a>
+                <div>
+                    {{ form.save_draft(class="btn btn-outline-primary") }}
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

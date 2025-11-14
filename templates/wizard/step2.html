@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Step 2: Biography - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <!-- Step Indicator -->
+        <div class="step-indicator mb-4">
+            <div class="step completed">
+                <div class="h5">1</div>
+                <small>Personal Info</small>
+            </div>
+            <div class="step active">
+                <div class="h5">2</div>
+                <small>Biography</small>
+            </div>
+            <div class="step">
+                <div class="h5">3</div>
+                <small>Publications</small>
+            </div>
+            <div class="step">
+                <div class="h5">4</div>
+                <small>Gallery</small>
+            </div>
+            <div class="step">
+                <div class="h5">5</div>
+                <small>Preview</small>
+            </div>
+        </div>
+
+        <h1>Step 2: Biography</h1>
+        <p class="lead">Write a brief biography about yourself. This will appear on your site's home page.</p>
+
+        <form method="POST" action="/wizard/{{ site.id }}/step/2" novalidate>
+            {{ form.hidden_tag() }}
+
+            <div class="form-section">
+                <h3>About You</h3>
+                <p class="text-muted">Write 1-2 paragraphs describing your background, interests, and areas of expertise.</p>
+                
+                <div class="form-group mb-3">
+                    {{ form.biography.label(class="form-label") }}
+                    {% if form.biography.errors %}
+                        {{ form.biography(class="form-control is-invalid") }}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.biography.errors %}{{ error }}<br>{% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.biography(class="form-control") }}
+                    {% endif %}
+                    <small class="form-text text-muted">Minimum 50 characters</small>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-between">
+                <div>
+                    <a href="/wizard/{{ site.id }}/step/1" class="btn btn-secondary">Back</a>
+                </div>
+                <div>
+                    {{ form.save_draft(class="btn btn-outline-primary") }}
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

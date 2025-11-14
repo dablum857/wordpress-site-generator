@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Select Site - WordPress Site Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <h1>Select a Site to Edit</h1>
+        <p class="lead">Choose which WordPress site you'd like to work on.</p>
+
+        {% if sites %}
+            <div class="row">
+                {% for site in sites %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">{{ site.site_name }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Created:</strong> {{ site.created_at.strftime('%B %d, %Y') }}</p>
+                                <p><strong>Last Updated:</strong> {{ site.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                {% if site.is_complete() %}
+                                    <p><span class="badge bg-success">Complete</span></p>
+                                {% else %}
+                                    <p><span class="badge bg-warning">In Progress</span></p>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-white">
+                                <div class="d-grid gap-2 d-md-flex">
+                                    <a href="/wizard/{{ site.id }}/step/1" class="btn btn-primary flex-md-grow-1">Edit</a>
+                                    <a href="/export/preview/{{ site.id }}" class="btn btn-success flex-md-grow-1">Preview & Download</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No sites found. <a href="/site/new">Create a new site</a> to get started.
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+            <a href="/site/new" class="btn btn-primary">Create New Site</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
