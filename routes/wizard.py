@@ -210,33 +210,47 @@ def _handle_step3(site, user):
         if step3_data.bibtex_content:
             form.bibtex_content.data = step3_data.bibtex_content
     
-    # Handle BibTeX file upload
-    if form.validate_on_submit() and form.bibtex_file.data:
-        try:
-            file = form.bibtex_file.data
-            bibtex_content = file.read().decode('utf-8')
-            step3_data.bibtex_content = bibtex_content
-            db.session.commit()
-            flash('BibTeX file uploaded successfully!', 'success')
-        except Exception as e:
-            flash(f'Error uploading BibTeX file: {str(e)}', 'error')
-    
-    # Handle manual bibtex content
-    if form.validate_on_submit() and form.bibtex_content.data:
-        step3_data.bibtex_content = form.bibtex_content.data
-        db.session.commit()
-    
-    if form.validate_on_submit():
-        if form.submit.data:
+    # Handle form submission
+    if request.method == 'POST':
+        # Handle BibTeX file upload
+        if form.bibtex_file.data:
+            try:
+                file = form.bibtex_file.data
+                bibtex_content = file.read().decode('utf-8')
+                step3_data.bibtex_content = bibtex_content
+                db.session.commit()
+                flash('BibTeX file uploaded successfully!', 'success')
+                return redirect(url_for('wizard.step', site_id=site.id, step=3))
+            except Exception as e:
+                flash(f'Error uploading BibTeX file: {str(e)}', 'error')
+        
+        # Handle manual bibtex content
+        elif form.bibtex_content.data:
+            if form.validate_on_submit():
+                step3_data.bibtex_content = form.bibtex_content.data
+                db.session.commit()
+                
+                if form.submit.data:
+                    return redirect(url_for('wizard.step', site_id=site.id, step=4))
+                else:
+                    flash('Step 3 saved as draft', 'success')
+                    return redirect(url_for('index'))
+        
+        # If no file or content, just validate and move forward
+        elif form.submit.data:
             return redirect(url_for('wizard.step', site_id=site.id, step=4))
-        else:
+        elif form.save_draft.data:
             flash('Step 3 saved as draft', 'success')
             return redirect(url_for('index'))
     
     # Get parsed publications
     publications = []
     if step3_data.bibtex_content:
-        publications = parse_bibtex(step3_data.bibtex_content)
+        try:
+            publications = parse_bibtex(step3_data.bibtex_content)
+        except Exception as e:
+            flash(f'Warning: Could not parse BibTeX content: {str(e)}', 'warning')
+            publications = []
     
     # Get manual publications
     manual_publications = step3_data.manual_publications

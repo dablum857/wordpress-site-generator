@@ -47,7 +47,11 @@ def export_routes(bp):
         # Parse publications
         publications = []
         if step3_data and step3_data.bibtex_content:
-            publications = parse_bibtex(step3_data.bibtex_content)
+            try:
+                publications = parse_bibtex(step3_data.bibtex_content)
+            except Exception as e:
+                print(f"Error parsing BibTeX: {e}")
+                publications = []
         
         # Get manual publications
         manual_publications = []
@@ -111,7 +115,11 @@ def export_routes(bp):
             # Parse publications and gallery for display
             publications = []
             if step3_data and step3_data.bibtex_content:
-                publications = parse_bibtex(step3_data.bibtex_content)
+                try:
+                    publications = parse_bibtex(step3_data.bibtex_content)
+                except Exception as e:
+                    print(f"Error parsing BibTeX: {e}")
+                    publications = []
             
             manual_publications = []
             if step3_data:
@@ -230,13 +238,28 @@ def _generate_wxr_content(user, site, step1_data, step2_data, step3_data, step4_
     homepage_content = _build_homepage_content(step1_data, step2_data, profile_picture_post_id)
     xml_lines.extend(_create_page_xml(user, 'Home', homepage_content, post_id_counter))
     
-    # Create Publications page
-    if step3_data and (step3_data.bibtex_content or step3_data.manual_publications):
-        publications = parse_bibtex(step3_data.bibtex_content) if step3_data.bibtex_content else []
-        if publications or step3_data.manual_publications:
-            post_id_counter += 1
-            pub_html = _build_publications_html(publications, step3_data.manual_publications)
-            xml_lines.extend(_create_page_xml(user, 'Publications', pub_html, post_id_counter))
+    # Create Publications page - parse BOTH BibTeX and manual publications
+    bibtex_publications = []
+    manual_publications_list = []
+    
+    if step3_data:
+        # Parse BibTeX content if present
+        if step3_data.bibtex_content:
+            try:
+                bibtex_publications = parse_bibtex(step3_data.bibtex_content)
+            except Exception as e:
+                print(f"Error parsing BibTeX: {e}")
+                bibtex_publications = []
+        
+        # Get manually added publications
+        if step3_data.manual_publications:
+            manual_publications_list = list(step3_data.manual_publications)
+    
+    # Create Publications page if we have any publications
+    if bibtex_publications or manual_publications_list:
+        post_id_counter += 1
+        pub_html = _build_publications_html(bibtex_publications, manual_publications_list)
+        xml_lines.extend(_create_page_xml(user, 'Publications', pub_html, post_id_counter))
     
     # Create Gallery page
     if gallery_post_ids:
@@ -378,16 +401,12 @@ def _build_publications_html(publications, manual_publications=None):
         content_parts.append('<!-- /wp:paragraph -->')
         return '\n'.join(content_parts)
     
-    # Build list
-    content_parts.append('<!-- wp:list -->')
-    content_parts.append('<ol class="wp-block-list">')
-    
+    # Build list using paragraph blocks instead of list block for better compatibility
     for pub in all_pubs:
         formatted = format_publication_html(pub)
-        content_parts.append('<li>{}</li>'.format(formatted))
-    
-    content_parts.append('</ol>')
-    content_parts.append('<!-- /wp:list -->')
+        content_parts.append('<!-- wp:paragraph -->')
+        content_parts.append('<p class="wp-block-paragraph">{}</p>'.format(formatted))
+        content_parts.append('<!-- /wp:paragraph -->')
     
     return '\n'.join(content_parts)
 
@@ -402,20 +421,22 @@ def _build_gallery_html(gallery_post_ids):
     content_parts.append('<!-- /wp:heading -->')
     content_parts.append('')
     
+    if not gallery_post_ids:
+        content_parts.append('<!-- wp:paragraph -->')
+        content_parts.append('<p class="wp-block-paragraph">No gallery images.</p>')
+        content_parts.append('<!-- /wp:paragraph -->')
+        return '\n'.join(content_parts)
+    
     # Gallery block with proper JSON
     ids_string = ','.join(str(id) for id in gallery_post_ids)
-    gallery_json = '{{"ids":[{}],"columns":3,"size":"large"}}'.format(ids_string)
+    gallery_json = '{{"ids":[{}],"columns":3,"size":"large","linkTo":"none"}}'.format(ids_string)
     
     content_parts.append('<!-- wp:gallery {} -->'.format(gallery_json))
     content_parts.append('<figure class="wp-block-gallery has-nested-images columns-3 is-cropped">')
     content_parts.append('<ul class="blocks-gallery-grid">')
     
     for post_id in gallery_post_ids:
-        content_parts.append('<li class="blocks-gallery-item">')
-        content_parts.append('<figure>')
-        content_parts.append('<img src="https://example.com/uploads/image{}.jpg" alt="" class="wp-image-{}" />'.format(post_id, post_id))
-        content_parts.append('</figure>')
-        content_parts.append('</li>')
+        content_parts.append('<li class="blocks-gallery-item"><figure><img src="https://example.com/uploads/image{}.jpg" alt="" class="wp-image-{}" /></figure></li>'.format(post_id, post_id))
     
     content_parts.append('</ul>')
     content_parts.append('</figure>')
