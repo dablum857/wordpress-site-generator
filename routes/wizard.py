@@ -167,6 +167,32 @@ def wizard_routes(bp):
             publication=publication
         )
 
+    @bp.route('/<int:site_id>/bibtex-publication/<int:pub_id>/delete', methods=['POST'])
+    @require_login
+    def delete_bibtex_publication(site_id, pub_id):
+        """Delete a BibTeX publication"""
+        from models import BibtexPublication
+        
+        user = User.query.get(session['user_id'])
+        site = WordPressSite.query.get_or_404(site_id)
+        
+        if site.user_id != user.id:
+            flash('You do not have permission to access this site.', 'error')
+            return redirect(url_for('index'))
+        
+        publication = BibtexPublication.query.get_or_404(pub_id)
+        
+        # Verify publication belongs to this site
+        if publication.step3.site_id != site.id:
+            flash('You do not have permission to delete this publication.', 'error')
+            return redirect(url_for('index'))
+        
+        db.session.delete(publication)
+        db.session.commit()
+        
+        flash('Publication deleted successfully!', 'success')
+        return redirect(url_for('wizard.step', site_id=site.id, step=3))
+
 def _handle_step1(site, user):
     """Handle Step 1: Personal Information"""
     env_data = get_environment_user_data()
@@ -242,25 +268,20 @@ def _handle_step2(site, user):
     
     return render_template('wizard/step2.html', form=form, site=site, step=2)
 
-
 def _handle_step3(site, user):
     """Handle Step 3: Publications"""
     from flask import current_app
-    
+    from models import BibtexPublication
+
     step3_data = site.step3_data
     if step3_data is None:
         step3_data = Step3Publications(site_id=site.id)
         db.session.add(step3_data)
         db.session.commit()
-    
+
     form = Step3FormUpdated()
     manual_form = ManualPublicationForm()
-    
-    if request.method == 'GET':
-        # Populate bibtex content
-        if step3_data.bibtex_content:
-            form.bibtex_content.data = step3_data.bibtex_content
-    
+
     # Handle form submission
     if request.method == 'POST':
         # Handle BibTeX file upload
@@ -268,54 +289,60 @@ def _handle_step3(site, user):
             try:
                 file = form.bibtex_file.data
                 bibtex_content = file.read().decode('utf-8')
+
+                # Parse the BibTeX content
+                parsed_pubs = parse_bibtex(bibtex_content)
+
+                # Store each parsed publication as a BibtexPublication record
+                for pub in parsed_pubs:
+                    bibtex_pub = BibtexPublication(
+                        step3_id=step3_data.id,
+                        entry_key=pub.get('key', ''),
+                        entry_type=pub.get('type', ''),
+                        title=pub.get('title', ''),
+                        author=pub.get('author', ''),
+                        year=pub.get('year', ''),
+                        journal=pub.get('journal', ''),
+                        booktitle=pub.get('booktitle', ''),
+                        publisher=pub.get('publisher', ''),
+                        volume=pub.get('volume', ''),
+                        pages=pub.get('pages', ''),
+                        doi=pub.get('doi', ''),
+                        url=pub.get('url', '')
+                    )
+                    db.session.add(bibtex_pub)
+
+                # Also store the raw content for reference
                 step3_data.bibtex_content = bibtex_content
                 db.session.commit()
-                flash('BibTeX file uploaded successfully!', 'success')
+
+                flash(f'BibTeX file uploaded successfully! Added {len(parsed_pubs)} publication(s).', 'success')
                 return redirect(url_for('wizard.step', site_id=site.id, step=3))
             except Exception as e:
                 flash(f'Error uploading BibTeX file: {str(e)}', 'error')
-        
-        # Handle manual bibtex content
-        elif form.bibtex_content.data:
-            if form.validate_on_submit():
-                step3_data.bibtex_content = form.bibtex_content.data
-                db.session.commit()
-                
-                if form.submit.data:
-                    return redirect(url_for('wizard.step', site_id=site.id, step=4))
-                else:
-                    flash('Step 3 saved as draft', 'success')
-                    return redirect(url_for('index'))
-        
-        # If no file or content, just validate and move forward
-        elif form.submit.data:
+
+        # Handle moving to next step
+        if form.submit.data:
             return redirect(url_for('wizard.step', site_id=site.id, step=4))
         elif form.save_draft.data:
             flash('Step 3 saved as draft', 'success')
             return redirect(url_for('index'))
-    
-    # Get parsed publications
-    publications = []
-    if step3_data.bibtex_content:
-        try:
-            publications = parse_bibtex(step3_data.bibtex_content)
-        except Exception as e:
-            flash(f'Warning: Could not parse BibTeX content: {str(e)}', 'warning')
-            publications = []
-    
+
+    # Get BibTeX publications from database
+    bibtex_publications = step3_data.bibtex_publications
+
     # Get manual publications
     manual_publications = step3_data.manual_publications
-    
+
     return render_template(
         'wizard/step3.html',
         form=form,
         manual_form=manual_form,
         site=site,
         step=3,
-        publications=publications,
+        bibtex_publications=bibtex_publications,
         manual_publications=manual_publications
     )
-
 
 def _handle_step4(site, user):
     """Handle Step 4: Gallery and Images"""

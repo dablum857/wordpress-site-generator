@@ -76,43 +76,116 @@ def delete_uploaded_file(site_id, filename, upload_folder):
         return True
     return False
 
-
 def parse_bibtex(bibtex_content):
     """
-    Parse BibTeX content and return list of publication dictionaries.
+    Parse BibTeX content and return a list of publication dictionaries.
+    Uses bibtexparser library for more robust parsing.
     
     Args:
         bibtex_content: String containing BibTeX entries
         
     Returns:
-        List of dictionaries with publication data
+        List of dictionaries, each representing a publication
     """
-    if not bibtex_content or not bibtex_content.strip():
-        return []
+    publications = []
     
     try:
-        bibtex_db = bibtexparser.loads(bibtex_content)
-        publications = []
+        import bibtexparser
+        from bibtexparser.bparser import BibTexParser
         
-        for entry in bibtex_db.entries:
-            pub = {
+        # Parse the BibTeX content
+        parser = BibTexParser(common_strings=True)
+        parser.ignore_nonstandard_types = False
+        bibtex_database = bibtexparser.loads(bibtex_content, parser=parser)
+        
+        # Convert entries to our format
+        for entry in bibtex_database.entries:
+            pub_dict = {
                 'key': entry.get('ID', ''),
-                'type': entry.get('ENTRYTYPE', ''),
+                'type': entry.get('ENTRYTYPE', '').lower(),
                 'title': entry.get('title', ''),
                 'author': entry.get('author', ''),
                 'year': entry.get('year', ''),
                 'journal': entry.get('journal', ''),
                 'booktitle': entry.get('booktitle', ''),
                 'publisher': entry.get('publisher', ''),
+                'volume': entry.get('volume', ''),
+                'pages': entry.get('pages', ''),
                 'doi': entry.get('doi', ''),
-                'url': entry.get('url', ''),
+                'url': entry.get('url', '')
             }
-            publications.append(pub)
+            
+            # Only add if we have at least a title
+            if pub_dict['title']:
+                publications.append(pub_dict)
         
         return publications
-    except Exception as e:
-        print(f"Error parsing BibTeX: {e}")
-        return []
+    
+    except ImportError:
+        # Fallback to regex parsing if bibtexparser is not available
+        return _parse_bibtex_regex(bibtex_content)
+
+
+def _parse_bibtex_regex(bibtex_content):
+    """
+    Fallback regex-based BibTeX parser.
+    
+    Args:
+        bibtex_content: String containing BibTeX entries
+        
+    Returns:
+        List of dictionaries, each representing a publication
+    """
+    import re
+    
+    publications = []
+    
+    # Split entries by @ symbol - more robust approach
+    # Find all @type{...} blocks
+    pattern = r'@(\w+)\s*\{\s*([^,\n]+),\s*([\s\S]*?)\n\s*\}'
+    
+    matches = re.finditer(pattern, bibtex_content, re.IGNORECASE)
+    
+    for match in matches:
+        entry_type = match.group(1).lower()
+        entry_key = match.group(2).strip()
+        entry_content = match.group(3)
+        
+        pub_dict = {
+            'key': entry_key,
+            'type': entry_type,
+            'title': '',
+            'author': '',
+            'year': '',
+            'journal': '',
+            'booktitle': '',
+            'publisher': '',
+            'volume': '',
+            'pages': '',
+            'doi': '',
+            'url': ''
+        }
+        
+        # Parse individual fields more carefully
+        # Match: field = {value} or field = "value" or field = value
+        field_pattern = r'(\w+)\s*=\s*(?:\{([^}]*)\}|"([^"]*)"|([^,\n}]*))'
+        
+        field_matches = re.finditer(field_pattern, entry_content, re.IGNORECASE)
+        
+        for field_match in field_matches:
+            field_name = field_match.group(1).lower()
+            # Get value from one of the three groups (braces, quotes, or plain)
+            field_value = field_match.group(2) or field_match.group(3) or field_match.group(4)
+            field_value = field_value.strip() if field_value else ''
+            
+            if field_name in pub_dict:
+                pub_dict[field_name] = field_value
+        
+        # Only add if we have at least a title
+        if pub_dict['title']:
+            publications.append(pub_dict)
+    
+    return publications
 
 
 def format_publication_html(publication):

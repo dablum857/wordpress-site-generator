@@ -30,23 +30,18 @@
         </div>
 
         <h1>Step 3: Publications</h1>
-        <p class="lead">Add your publications. You can upload a BibTeX file, paste BibTeX content, or manually enter publication details.</p>
+        <p class="lead">Add your publications by uploading a BibTeX file or manually entering publication details.</p>
 
         <!-- Nav Tabs for different input methods -->
         <ul class="nav nav-tabs mb-3" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="true">
-                    👁️ View All Publications {% if publications or manual_publications %}<span class="badge bg-success">{{ publications|length + manual_publications|length }}</span>{% endif %}
+                    👁️ View All Publications {% if bibtex_publications or manual_publications %}<span class="badge bg-success">{{ bibtex_publications|length + manual_publications|length }}</span>{% endif %}
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="false">
                     📤 Upload BibTeX File
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="paste-tab" data-bs-toggle="tab" data-bs-target="#paste" type="button" role="tab" aria-controls="paste" aria-selected="false">
-                    📋 Paste BibTeX
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -65,46 +60,52 @@
                         <h5 class="mb-0">All Publications</h5>
                     </div>
                     <div class="card-body">
-                        {% if publications or manual_publications %}
+                        {% if bibtex_publications or manual_publications %}
                             <div class="list-group">
                                 <!-- BibTeX Publications -->
-                                {% for pub in publications %}
+                                {% for pub in bibtex_publications %}
                                     <div class="list-group-item">
                                         <div class="d-flex w-100 justify-content-between align-items-start">
                                             <div class="flex-grow-1">
                                                 <div class="d-flex align-items-center gap-2 mb-1">
-                                                    <h6 class="mb-0">{{ pub.get('title', 'Untitled') }}</h6>
+                                                    <h6 class="mb-0">{{ pub.title }}</h6>
                                                     <span class="badge bg-info">From BibTeX</span>
                                                 </div>
-                                                {% if pub.get('author') %}
-                                                    <p class="mb-1"><strong>Authors:</strong> {{ pub.get('author') }}</p>
+                                                {% if pub.author %}
+                                                    <p class="mb-1"><strong>Authors:</strong> {{ pub.author }}</p>
                                                 {% endif %}
-                                                {% if pub.get('year') %}
-                                                    <p class="mb-1"><strong>Year:</strong> {{ pub.get('year') }}</p>
+                                                {% if pub.year %}
+                                                    <p class="mb-1"><strong>Year:</strong> {{ pub.year }}</p>
                                                 {% endif %}
-                                                {% if pub.get('journal') %}
-                                                    <p class="mb-1"><strong>Journal:</strong> {{ pub.get('journal') }}</p>
+                                                {% if pub.journal %}
+                                                    <p class="mb-1"><strong>Journal:</strong> {{ pub.journal }}</p>
                                                 {% endif %}
-                                                {% if pub.get('volume') %}
-                                                    <p class="mb-1"><strong>Volume:</strong> {{ pub.get('volume') }}</p>
+                                                {% if pub.booktitle %}
+                                                    <p class="mb-1"><strong>Booktitle:</strong> {{ pub.booktitle }}</p>
                                                 {% endif %}
-                                                {% if pub.get('pages') %}
-                                                    <p class="mb-1"><strong>Pages:</strong> {{ pub.get('pages') }}</p>
+                                                {% if pub.volume %}
+                                                    <p class="mb-1"><strong>Volume:</strong> {{ pub.volume }}</p>
                                                 {% endif %}
-                                                {% if pub.get('doi') or pub.get('url') %}
+                                                {% if pub.pages %}
+                                                    <p class="mb-1"><strong>Pages:</strong> {{ pub.pages }}</p>
+                                                {% endif %}
+                                                {% if pub.publisher %}
+                                                    <p class="mb-1"><strong>Publisher:</strong> {{ pub.publisher }}</p>
+                                                {% endif %}
+                                                {% if pub.doi or pub.url %}
                                                     <p class="mb-0">
-                                                        {% if pub.get('doi') %}
-                                                            <a href="https://doi.org/{{ pub.get('doi') }}" target="_blank" class="btn btn-sm btn-link">DOI</a>
+                                                        {% if pub.doi %}
+                                                            <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-sm btn-link">DOI</a>
                                                         {% endif %}
-                                                        {% if pub.get('url') %}
-                                                            <a href="{{ pub.get('url') }}" target="_blank" class="btn btn-sm btn-link">Link</a>
+                                                        {% if pub.url %}
+                                                            <a href="{{ pub.url }}" target="_blank" class="btn btn-sm btn-link">Link</a>
                                                         {% endif %}
                                                     </p>
                                                 {% endif %}
                                             </div>
-                                            <div>
-                                                <small class="text-muted">Read-only</small>
-                                            </div>
+                                            <form method="POST" action="/wizard/{{ site.id }}/bibtex-publication/{{ pub.id }}/delete" style="display: inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this publication?')">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 {% endfor %}
@@ -152,7 +153,7 @@
                         {% else %}
                             <div class="alert alert-info mb-0">
                                 <strong>📚 No publications yet</strong>
-                                <p class="mb-0">Add publications using one of the methods below.</p>
+                                <p class="mb-0">Add publications by uploading a BibTeX file or manually entering publication details.</p>
                             </div>
                         {% endif %}
                     </div>
@@ -166,6 +167,8 @@
                         <h5 class="mb-0">Upload BibTeX File</h5>
                     </div>
                     <div class="card-body">
+                        <p class="text-muted mb-3">Upload a .bib or .txt file containing your BibTeX entries. Publications from the file will be parsed and added automatically.</p>
+                        
                         <form method="POST" action="/wizard/{{ site.id }}/step/3" enctype="multipart/form-data" novalidate>
                             {{ form.hidden_tag() }}
 
@@ -182,40 +185,9 @@
                                 <small class="form-text text-muted">Upload a .bib or .txt file containing BibTeX entries</small>
                             </div>
 
-                            <button type="submit" name="upload" class="btn btn-info">Upload File</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Paste BibTeX Tab -->
-            <div class="tab-pane fade" id="paste" role="tabpanel" aria-labelledby="paste-tab">
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">Paste BibTeX Content</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">Paste your BibTeX entries below.</p>
-                        
-                        <form method="POST" action="/wizard/{{ site.id }}/step/3" novalidate>
-                            {{ form.hidden_tag() }}
-
-                            <div class="form-group mb-3">
-                                {{ form.bibtex_content.label(class="form-label") }}
-                                {% if form.bibtex_content.errors %}
-                                    {{ form.bibtex_content(class="form-control is-invalid") }}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.bibtex_content.errors %}{{ error }}<br>{% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ form.bibtex_content(class="form-control font-monospace") }}
-                                {% endif %}
-                                <small class="form-text text-muted">This field is optional. You can add publications now or skip this step.</small>
-                            </div>
-
                             <div class="card bg-light mb-3">
                                 <div class="card-header">
-                                    <h6 class="mb-0">BibTeX Example:</h6>
+                                    <h6 class="mb-0">BibTeX Format Example:</h6>
                                 </div>
                                 <div class="card-body">
                                     <pre class="mb-0" style="font-size: 0.85rem;">@article{Smith2023,
@@ -226,12 +198,18 @@
   volume={42},
   pages={123-145},
   doi={10.1234/example}
+}
+
+@book{Johnson2022,
+  author={Johnson, Alice},
+  title={Advanced Research Methods},
+  publisher={Academic Press},
+  year={2022}
 }</pre>
                                 </div>
                             </div>
 
-                            {{ form.save_draft(class="btn btn-outline-primary") }}
-                            {{ form.submit(class="btn btn-primary") }}
+                            <button type="submit" class="btn btn-info">Upload File</button>
                         </form>
                     </div>
                 </div>
@@ -244,7 +222,7 @@
                         <h5 class="mb-0">Add Publication Manually</h5>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted">Fill in the form below to add a single publication.</p>
+                        <p class="text-muted mb-3">Fill in the form below to add a single publication manually.</p>
                         
                         <form method="POST" action="/wizard/{{ site.id }}/publication/add" novalidate>
                             {{ manual_form.hidden_tag() }}

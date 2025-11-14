@@ -53,22 +53,13 @@ class Step2Form(FlaskForm):
     submit = SubmitField('Next Step')
     save_draft = SubmitField('Save Draft')
 
-
 class Step3FormUpdated(FlaskForm):
-    """Step 3: Publications - Updated with file upload"""
+    """Step 3: Publications - Updated with file upload only"""
     bibtex_file = FileField('Upload BibTeX File', validators=[
         FileAllowed(['bib', 'txt'], 'BibTeX files only!')
     ])
-    
-    bibtex_content = TextAreaField('Publications (BibTeX Format)', validators=[
-        Optional()
-    ], render_kw={
-        'rows': 15,
-        'placeholder': '@article{key2023,\n  author={Author, Name},\n  title={Article Title},\n  journal={Journal Name},\n  year={2023}\n}'
-    })
     submit = SubmitField('Next Step')
     save_draft = SubmitField('Save Draft')
-
 
 class ManualPublicationForm(FlaskForm):
     """Form for manually entering a single publication"""

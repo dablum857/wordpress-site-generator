@@ -87,25 +87,6 @@ class Step2Biography(db.Model):
     def __repr__(self):
         return f'<Step2Biography {self.site_id}>'
 
-
-class Step3Publications(db.Model):
-    """Step 3: Publications (BibTeX format)"""
-    __tablename__ = 'step3_publications'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    site_id = db.Column(db.Integer, db.ForeignKey('wordpress_sites.id'), nullable=False)
-    
-    bibtex_content = db.Column(db.Text, nullable=True)
-    
-    # Relationship to manual publications
-    manual_publications = db.relationship('ManualPublication', backref='step3', lazy=True, cascade='all, delete-orphan')
-    
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<Step3Publications {self.site_id}>'
-
-
 class ManualPublication(db.Model):
     """Manually entered publication"""
     __tablename__ = 'manual_publications'
@@ -164,3 +145,64 @@ class Step4Gallery(db.Model):
     
     def __repr__(self):
         return f'<Step4Gallery {self.site_id}>'
+
+class BibtexPublication(db.Model):
+    """BibTeX publication parsed from uploaded file"""
+    __tablename__ = 'bibtex_publications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    step3_id = db.Column(db.Integer, db.ForeignKey('step3_publications.id'), nullable=False)
+
+    entry_key = db.Column(db.String(100), nullable=False)
+    entry_type = db.Column(db.String(50), nullable=False)
+    title = db.Column(db.String(500), nullable=False)
+    author = db.Column(db.String(500), nullable=True)
+    year = db.Column(db.String(4), nullable=True)
+    journal = db.Column(db.String(500), nullable=True)
+    booktitle = db.Column(db.String(500), nullable=True)
+    publisher = db.Column(db.String(500), nullable=True)
+    volume = db.Column(db.String(50), nullable=True)
+    pages = db.Column(db.String(50), nullable=True)
+    doi = db.Column(db.String(100), nullable=True)
+    url = db.Column(db.String(500), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        """Convert to dictionary for display"""
+        return {
+            'id': self.id,
+            'key': self.entry_key,
+            'type': self.entry_type,
+            'title': self.title,
+            'author': self.author,
+            'year': self.year,
+            'journal': self.journal,
+            'booktitle': self.booktitle,
+            'publisher': self.publisher,
+            'volume': self.volume,
+            'pages': self.pages,
+            'doi': self.doi,
+            'url': self.url
+        }
+
+    def __repr__(self):
+        return f'<BibtexPublication {self.title}>'
+
+class Step3Publications(db.Model):
+    """Step 3: Publications (BibTeX format)"""
+    __tablename__ = 'step3_publications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    site_id = db.Column(db.Integer, db.ForeignKey('wordpress_sites.id'), nullable=False)
+
+    bibtex_content = db.Column(db.Text, nullable=True)
+
+    # Relationships
+    manual_publications = db.relationship('ManualPublication', backref='step3', lazy=True, cascade='all, delete-orphan')
+    bibtex_publications = db.relationship('BibtexPublication', backref='step3', lazy=True, cascade='all, delete-orphan')
+
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Step3Publications {self.site_id}>'
