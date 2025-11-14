@@ -36,14 +36,15 @@ def generate_wxr_file(user, site, step1_data, step2_data, step3_data, step4_data
         ElementTree object
     """
     
-    # Create root element with proper namespace declarations
+    # Create root RSS element
     rss = Element('rss')
     rss.set('version', '2.0')
-    rss.set('{http://www.w3.org/2000/xmlns/}excerpt', NAMESPACES['excerpt'])
-    rss.set('{http://www.w3.org/2000/xmlns/}content', NAMESPACES['content'])
-    rss.set('{http://www.w3.org/2000/xmlns/}wfw', NAMESPACES['wfw'])
-    rss.set('{http://www.w3.org/2000/xmlns/}dc', NAMESPACES['dc'])
-    rss.set('{http://www.w3.org/2000/xmlns/}wp', NAMESPACES['wp'])
+    # Set namespace declarations correctly
+    rss.set('xmlns:excerpt', NAMESPACES['excerpt'])
+    rss.set('xmlns:content', NAMESPACES['content'])
+    rss.set('xmlns:wfw', NAMESPACES['wfw'])
+    rss.set('xmlns:dc', NAMESPACES['dc'])
+    rss.set('xmlns:wp', NAMESPACES['wp'])
     
     channel = SubElement(rss, 'channel')
     
@@ -125,6 +126,10 @@ def _add_channel_metadata(channel, site, user):
     generator = SubElement(channel, 'generator')
     generator.text = 'https://github.com/mit-libraries/wordpress-site-generator'
     
+    # IMPORTANT: WordPress requires the WXR version
+    wp_wxr_version = SubElement(channel, f'{{{NAMESPACES["wp"]}}}wxr_version')
+    wp_wxr_version.text = '1.2'
+    
     # WordPress namespaced elements
     wp_base = SubElement(channel, f'{{{NAMESPACES["wp"]}}}base')
     wp_base.text = 'https://example.com/index.php/'
@@ -169,7 +174,7 @@ def _create_page_item(channel, user, title, content, post_id):
     wp_is_sticky = SubElement(item, f'{{{NAMESPACES["wp"]}}}is_sticky')
     wp_is_sticky.text = '0'
     
-    # Content
+    # Content - CDATA for safety
     item_content = SubElement(item, f'{{{NAMESPACES["content"]}}}encoded')
     item_content.text = content
     
