@@ -54,8 +54,12 @@ class Step2Form(FlaskForm):
     save_draft = SubmitField('Save Draft')
 
 
-class Step3Form(FlaskForm):
-    """Step 3: Publications"""
+class Step3FormUpdated(FlaskForm):
+    """Step 3: Publications - Updated with file upload"""
+    bibtex_file = FileField('Upload BibTeX File', validators=[
+        FileAllowed(['bib', 'txt'], 'BibTeX files only!')
+    ])
+    
     bibtex_content = TextAreaField('Publications (BibTeX Format)', validators=[
         Optional()
     ], render_kw={
@@ -64,6 +68,39 @@ class Step3Form(FlaskForm):
     })
     submit = SubmitField('Next Step')
     save_draft = SubmitField('Save Draft')
+
+
+class ManualPublicationForm(FlaskForm):
+    """Form for manually entering a single publication"""
+    author = StringField('Author(s)', validators=[
+        DataRequired(message='Author is required'),
+        Length(max=500)
+    ])
+    title = StringField('Title', validators=[
+        DataRequired(message='Title is required'),
+        Length(max=500)
+    ])
+    publication_year = StringField('Year', validators=[
+        Optional(),
+        Length(max=4)
+    ])
+    journal_or_booktitle = StringField('Journal/Booktitle', validators=[
+        Optional(),
+        Length(max=500)
+    ])
+    publisher = StringField('Publisher', validators=[
+        Optional(),
+        Length(max=500)
+    ])
+    doi = StringField('DOI (Optional)', validators=[
+        Optional(),
+        Length(max=100)
+    ])
+    url = StringField('URL (Optional)', validators=[
+        Optional(),
+        Length(max=500)
+    ])
+    submit = SubmitField('Add Publication')
 
 
 class Step4Form(FlaskForm):

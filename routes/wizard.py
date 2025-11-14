@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, session
 from functools import wraps
-from models import db, User, WordPressSite, Step1PersonalInfo, Step2Biography, Step3Publications, Step4Gallery
-from forms import Step1Form, Step2Form, Step3Form, Step4Form
+from models import db, User, WordPressSite, Step1PersonalInfo, Step2Biography, Step3Publications, Step4Gallery, ManualPublication
+from forms import Step1Form, Step2Form, Step3FormUpdated, Step4Form, ManualPublicationForm
 from utils import get_environment_user_data, save_uploaded_file, get_uploaded_file_path, parse_bibtex
 from wxr_generator import generate_wxr_file
 import os
@@ -46,6 +46,74 @@ def wizard_routes(bp):
         else:
             flash('Invalid step', 'error')
             return redirect(url_for('index'))
+    
+    
+    @bp.route('/<int:site_id>/publication/add', methods=['POST'])
+    @require_login
+    def add_publication(site_id):
+        """Add a manual publication"""
+        user = User.query.get(session['user_id'])
+        site = WordPressSite.query.get_or_404(site_id)
+        
+        if site.user_id != user.id:
+            flash('You do not have permission to access this site.', 'error')
+            return redirect(url_for('index'))
+        
+        form = ManualPublicationForm()
+        
+        if form.validate_on_submit():
+            step3_data = site.step3_data
+            if step3_data is None:
+                step3_data = Step3Publications(site_id=site.id)
+                db.session.add(step3_data)
+                db.session.commit()
+            
+            manual_pub = ManualPublication(
+                step3_id=step3_data.id,
+                author=form.author.data,
+                title=form.title.data,
+                publication_year=form.publication_year.data,
+                journal_or_booktitle=form.journal_or_booktitle.data,
+                publisher=form.publisher.data,
+                doi=form.doi.data,
+                url=form.url.data
+            )
+            
+            db.session.add(manual_pub)
+            db.session.commit()
+            
+            flash('Publication added successfully!', 'success')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f'{field}: {error}', 'error')
+        
+        return redirect(url_for('wizard.step', site_id=site.id, step=3))
+    
+    
+    @bp.route('/<int:site_id>/publication/<int:pub_id>/delete', methods=['POST'])
+    @require_login
+    def delete_publication(site_id, pub_id):
+        """Delete a manual publication"""
+        user = User.query.get(session['user_id'])
+        site = WordPressSite.query.get_or_404(site_id)
+        
+        if site.user_id != user.id:
+            flash('You do not have permission to access this site.', 'error')
+            return redirect(url_for('index'))
+        
+        publication = ManualPublication.query.get_or_404(pub_id)
+        
+        # Verify publication belongs to this site
+        if publication.step3.site_id != site.id:
+            flash('You do not have permission to delete this publication.', 'error')
+            return redirect(url_for('index'))
+        
+        db.session.delete(publication)
+        db.session.commit()
+        
+        flash('Publication deleted successfully!', 'success')
+        return redirect(url_for('wizard.step', site_id=site.id, step=3))
 
 
 def _handle_step1(site, user):
@@ -126,29 +194,62 @@ def _handle_step2(site, user):
 
 def _handle_step3(site, user):
     """Handle Step 3: Publications"""
+    from flask import current_app
+    
     step3_data = site.step3_data
-    
-    form = Step3Form()
-    
-    if step3_data and request.method == 'GET':
-        form.bibtex_content.data = step3_data.bibtex_content
-    
-    if form.validate_on_submit():
-        if step3_data is None:
-            step3_data = Step3Publications(site_id=site.id)
-        
-        step3_data.bibtex_content = form.bibtex_content.data or ''
-        
+    if step3_data is None:
+        step3_data = Step3Publications(site_id=site.id)
         db.session.add(step3_data)
         db.session.commit()
-        
+    
+    form = Step3FormUpdated()
+    manual_form = ManualPublicationForm()
+    
+    if request.method == 'GET':
+        # Populate bibtex content
+        if step3_data.bibtex_content:
+            form.bibtex_content.data = step3_data.bibtex_content
+    
+    # Handle BibTeX file upload
+    if form.validate_on_submit() and form.bibtex_file.data:
+        try:
+            file = form.bibtex_file.data
+            bibtex_content = file.read().decode('utf-8')
+            step3_data.bibtex_content = bibtex_content
+            db.session.commit()
+            flash('BibTeX file uploaded successfully!', 'success')
+        except Exception as e:
+            flash(f'Error uploading BibTeX file: {str(e)}', 'error')
+    
+    # Handle manual bibtex content
+    if form.validate_on_submit() and form.bibtex_content.data:
+        step3_data.bibtex_content = form.bibtex_content.data
+        db.session.commit()
+    
+    if form.validate_on_submit():
         if form.submit.data:
             return redirect(url_for('wizard.step', site_id=site.id, step=4))
         else:
             flash('Step 3 saved as draft', 'success')
             return redirect(url_for('index'))
     
-    return render_template('wizard/step3.html', form=form, site=site, step=3)
+    # Get parsed publications
+    publications = []
+    if step3_data.bibtex_content:
+        publications = parse_bibtex(step3_data.bibtex_content)
+    
+    # Get manual publications
+    manual_publications = step3_data.manual_publications
+    
+    return render_template(
+        'wizard/step3.html',
+        form=form,
+        manual_form=manual_form,
+        site=site,
+        step=3,
+        publications=publications,
+        manual_publications=manual_publications
+    )
 
 
 def _handle_step4(site, user):
@@ -218,3 +319,8 @@ def _handle_step4(site, user):
         current_profile=current_profile,
         current_gallery=current_gallery
     )
+
+
+def _handle_preview(site, user):
+    """Handle preview step (deprecated - handled in export.py)"""
+    return redirect(url_for('export.preview', site_id=site.id))

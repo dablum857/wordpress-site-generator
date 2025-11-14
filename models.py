@@ -97,10 +97,47 @@ class Step3Publications(db.Model):
     
     bibtex_content = db.Column(db.Text, nullable=True)
     
+    # Relationship to manual publications
+    manual_publications = db.relationship('ManualPublication', backref='step3', lazy=True, cascade='all, delete-orphan')
+    
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
         return f'<Step3Publications {self.site_id}>'
+
+
+class ManualPublication(db.Model):
+    """Manually entered publication"""
+    __tablename__ = 'manual_publications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    step3_id = db.Column(db.Integer, db.ForeignKey('step3_publications.id'), nullable=False)
+    
+    author = db.Column(db.String(500), nullable=False)
+    title = db.Column(db.String(500), nullable=False)
+    publication_year = db.Column(db.String(4), nullable=True)
+    journal_or_booktitle = db.Column(db.String(500), nullable=True)
+    publisher = db.Column(db.String(500), nullable=True)
+    doi = db.Column(db.String(100), nullable=True)
+    url = db.Column(db.String(500), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        """Convert to dictionary for display"""
+        return {
+            'id': self.id,
+            'author': self.author,
+            'title': self.title,
+            'year': self.publication_year,
+            'journal': self.journal_or_booktitle,
+            'publisher': self.publisher,
+            'doi': self.doi,
+            'url': self.url
+        }
+    
+    def __repr__(self):
+        return f'<ManualPublication {self.title}>'
 
 
 class Step4Gallery(db.Model):

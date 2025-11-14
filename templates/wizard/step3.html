@@ -30,38 +30,89 @@
         </div>
 
         <h1>Step 3: Publications</h1>
-        <p class="lead">Add your publications in BibTeX format. This will create a Publications page on your site.</p>
+        <p class="lead">Add your publications. You can upload a BibTeX file, paste BibTeX content, or manually enter publication details.</p>
 
-        <div class="alert alert-info mb-3">
-            <strong>BibTeX Format Help:</strong>
-            <p class="mb-0">Paste your publications in standard BibTeX format. A publications page will be created from this data. Leave empty if you don't have publications to list.</p>
-        </div>
+        <!-- Nav Tabs for different input methods -->
+        <ul class="nav nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" aria-controls="upload" aria-selected="true">
+                    📤 Upload BibTeX File
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="paste-tab" data-bs-toggle="tab" data-bs-target="#paste" type="button" role="tab" aria-controls="paste" aria-selected="false">
+                    📋 Paste BibTeX
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual" type="button" role="tab" aria-controls="manual" aria-selected="false">
+                    ✍️ Add Manually
+                </button>
+            </li>
+        </ul>
 
-        <form method="POST" action="/wizard/{{ site.id }}/step/3" novalidate>
-            {{ form.hidden_tag() }}
-
-            <div class="form-section">
-                <h3>Your Publications</h3>
-                
-                <div class="form-group mb-3">
-                    {{ form.bibtex_content.label(class="form-label") }}
-                    {% if form.bibtex_content.errors %}
-                        {{ form.bibtex_content(class="form-control is-invalid") }}
-                        <div class="invalid-feedback d-block">
-                            {% for error in form.bibtex_content.errors %}{{ error }}<br>{% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.bibtex_content(class="form-control font-monospace") }}
-                    {% endif %}
-                    <small class="form-text text-muted">This field is optional. You can add publications now or skip this step.</small>
-                </div>
-
-                <div class="card bg-light">
-                    <div class="card-header">
-                        <h6 class="mb-0">BibTeX Example:</h6>
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Upload BibTeX File Tab -->
+            <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Upload BibTeX File</h5>
                     </div>
                     <div class="card-body">
-                        <pre class="mb-0" style="font-size: 0.85rem;">@article{Smith2023,
+                        <form method="POST" action="/wizard/{{ site.id }}/step/3" enctype="multipart/form-data" novalidate>
+                            {{ form.hidden_tag() }}
+
+                            <div class="form-group mb-3">
+                                {{ form.bibtex_file.label(class="form-label") }}
+                                {% if form.bibtex_file.errors %}
+                                    {{ form.bibtex_file(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.bibtex_file.errors %}{{ error }}<br>{% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.bibtex_file(class="form-control", accept=".bib,.txt") }}
+                                {% endif %}
+                                <small class="form-text text-muted">Upload a .bib or .txt file containing BibTeX entries</small>
+                            </div>
+
+                            <button type="submit" name="upload" class="btn btn-info">Upload File</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paste BibTeX Tab -->
+            <div class="tab-pane fade" id="paste" role="tabpanel" aria-labelledby="paste-tab">
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Paste BibTeX Content</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Paste your BibTeX entries below.</p>
+                        
+                        <form method="POST" action="/wizard/{{ site.id }}/step/3" novalidate>
+                            {{ form.hidden_tag() }}
+
+                            <div class="form-group mb-3">
+                                {{ form.bibtex_content.label(class="form-label") }}
+                                {% if form.bibtex_content.errors %}
+                                    {{ form.bibtex_content(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.bibtex_content.errors %}{{ error }}<br>{% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ form.bibtex_content(class="form-control font-monospace") }}
+                                {% endif %}
+                                <small class="form-text text-muted">This field is optional. You can add publications now or skip this step.</small>
+                            </div>
+
+                            <div class="card bg-light mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">BibTeX Example:</h6>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="mb-0" style="font-size: 0.85rem;">@article{Smith2023,
   author={Smith, John and Doe, Jane},
   title={Revolutionary Discoveries in Science},
   journal={Journal of Important Research},
@@ -70,20 +121,193 @@
   pages={123-145},
   doi={10.1234/example}
 }</pre>
+                                </div>
+                            </div>
+
+                            {{ form.save_draft(class="btn btn-outline-primary") }}
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex gap-2 justify-content-between mt-4">
-                <div>
-                    <a href="/wizard/{{ site.id }}/step/2" class="btn btn-secondary">Back</a>
+            <!-- Manual Entry Tab -->
+            <div class="tab-pane fade" id="manual" role="tabpanel" aria-labelledby="manual-tab">
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">Add Publication Manually</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Fill in the form below to add a single publication.</p>
+                        
+                        <form method="POST" action="/wizard/{{ site.id }}/publication/add" novalidate>
+                            {{ manual_form.hidden_tag() }}
+
+                            <div class="form-group mb-3">
+                                {{ manual_form.author.label(class="form-label") }}
+                                {% if manual_form.author.errors %}
+                                    {{ manual_form.author(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in manual_form.author.errors %}{{ error }}<br>{% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ manual_form.author(class="form-control", placeholder="e.g., John Smith, Jane Doe") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="form-group mb-3">
+                                {{ manual_form.title.label(class="form-label") }}
+                                {% if manual_form.title.errors %}
+                                    {{ manual_form.title(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in manual_form.title.errors %}{{ error }}<br>{% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ manual_form.title(class="form-control", placeholder="Publication title") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        {{ manual_form.publication_year.label(class="form-label") }}
+                                        {% if manual_form.publication_year.errors %}
+                                            {{ manual_form.publication_year(class="form-control is-invalid") }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in manual_form.publication_year.errors %}{{ error }}<br>{% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ manual_form.publication_year(class="form-control", placeholder="2023") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        {{ manual_form.publisher.label(class="form-label") }}
+                                        {% if manual_form.publisher.errors %}
+                                            {{ manual_form.publisher(class="form-control is-invalid") }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in manual_form.publisher.errors %}{{ error }}<br>{% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ manual_form.publisher(class="form-control", placeholder="(Optional)") }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                {{ manual_form.journal_or_booktitle.label(class="form-label") }}
+                                {% if manual_form.journal_or_booktitle.errors %}
+                                    {{ manual_form.journal_or_booktitle(class="form-control is-invalid") }}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in manual_form.journal_or_booktitle.errors %}{{ error }}<br>{% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ manual_form.journal_or_booktitle(class="form-control", placeholder="Journal or Conference Name (Optional)") }}
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        {{ manual_form.doi.label(class="form-label") }}
+                                        {% if manual_form.doi.errors %}
+                                            {{ manual_form.doi(class="form-control is-invalid") }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in manual_form.doi.errors %}{{ error }}<br>{% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ manual_form.doi(class="form-control", placeholder="e.g., 10.1234/example") }}
+                                        {% endif %}
+                                        <small class="form-text text-muted">Optional</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        {{ manual_form.url.label(class="form-label") }}
+                                        {% if manual_form.url.errors %}
+                                            {{ manual_form.url(class="form-control is-invalid") }}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in manual_form.url.errors %}{{ error }}<br>{% endfor %}
+                                            </div>
+                                        {% else %}
+                                            {{ manual_form.url(class="form-control", placeholder="https://...") }}
+                                        {% endif %}
+                                        <small class="form-text text-muted">Optional</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ manual_form.submit(class="btn btn-warning") }}
+                        </form>
+                    </div>
                 </div>
-                <div>
-                    {{ form.save_draft(class="btn btn-outline-primary") }}
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
+
+                <!-- Display manually added publications -->
+                {% if manual_publications %}
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Your Manually Added Publications ({{ manual_publications|length }})</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for pub in manual_publications %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">{{ pub.title }}</h6>
+                                                <p class="mb-1"><strong>Authors:</strong> {{ pub.author }}</p>
+                                                {% if pub.publication_year %}
+                                                    <p class="mb-1"><strong>Year:</strong> {{ pub.publication_year }}</p>
+                                                {% endif %}
+                                                {% if pub.journal_or_booktitle %}
+                                                    <p class="mb-1"><strong>Journal/Booktitle:</strong> {{ pub.journal_or_booktitle }}</p>
+                                                {% endif %}
+                                                {% if pub.publisher %}
+                                                    <p class="mb-1"><strong>Publisher:</strong> {{ pub.publisher }}</p>
+                                                {% endif %}
+                                                {% if pub.doi or pub.url %}
+                                                    <p class="mb-0">
+                                                        {% if pub.doi %}
+                                                            <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-sm btn-link">DOI</a>
+                                                        {% endif %}
+                                                        {% if pub.url %}
+                                                            <a href="{{ pub.url }}" target="_blank" class="btn btn-sm btn-link">Link</a>
+                                                        {% endif %}
+                                                    </p>
+                                                {% endif %}
+                                            </div>
+                                            <form method="POST" action="/wizard/{{ site.id }}/publication/{{ pub.id }}/delete" style="display: inline;">
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this publication?')">Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
-        </form>
+        </div>
+
+        <!-- Preview Section -->
+        {% if publications or manual_publications %}
+            <div class="alert alert-info mt-4">
+                <strong>📊 Preview ({{ publications|length + manual_publications|length }} publications)</strong>
+                <p class="mb-0">Your publications will be displayed on a dedicated Publications page when imported into WordPress.</p>
+            </div>
+        {% endif %}
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex gap-2 justify-content-between mt-4">
+            <div>
+                <a href="/wizard/{{ site.id }}/step/2" class="btn btn-secondary">Back</a>
+            </div>
+            <div>
+                <a href="/wizard/{{ site.id }}/step/4" class="btn btn-primary">Next Step (Skip Publications)</a>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

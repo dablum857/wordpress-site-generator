@@ -1,7 +1,7 @@
 from flask import render_template, send_file, redirect, url_for, flash, session, current_app
 from functools import wraps
 from models import User, WordPressSite
-from utils import parse_bibtex
+from utils import parse_bibtex, format_publication_html
 from io import BytesIO
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -49,6 +49,11 @@ def export_routes(bp):
         if step3_data and step3_data.bibtex_content:
             publications = parse_bibtex(step3_data.bibtex_content)
         
+        # Get manual publications
+        manual_publications = []
+        if step3_data:
+            manual_publications = step3_data.manual_publications
+        
         # Get gallery images
         gallery_images = []
         if step4_data:
@@ -61,6 +66,7 @@ def export_routes(bp):
                              step3_data=step3_data,
                              step4_data=step4_data,
                              publications=publications,
+                             manual_publications=manual_publications,
                              gallery_images=gallery_images)
     
     
@@ -107,6 +113,10 @@ def export_routes(bp):
             if step3_data and step3_data.bibtex_content:
                 publications = parse_bibtex(step3_data.bibtex_content)
             
+            manual_publications = []
+            if step3_data:
+                manual_publications = step3_data.manual_publications
+            
             gallery_images = []
             if step4_data:
                 gallery_images = step4_data.get_gallery_images()
@@ -114,7 +124,7 @@ def export_routes(bp):
             return render_template('wizard/download.html',
                                  site=site,
                                  filename=filename,
-                                 has_publications=bool(publications),
+                                 has_publications=bool(publications or manual_publications),
                                  has_gallery=bool(gallery_images))
         
         except Exception as e:
@@ -164,7 +174,7 @@ def _generate_wxr_content(user, site, step1_data, step2_data, step3_data, step4_
         String containing valid WXR XML
     """
     import os
-    from utils import get_uploaded_file_path, parse_bibtex, format_publication_html
+    from utils import get_uploaded_file_path
     
     # Start XML document
     xml_lines = [
@@ -221,11 +231,11 @@ def _generate_wxr_content(user, site, step1_data, step2_data, step3_data, step4_
     xml_lines.extend(_create_page_xml(user, 'Home', homepage_content, post_id_counter))
     
     # Create Publications page
-    if step3_data and step3_data.bibtex_content:
-        publications = parse_bibtex(step3_data.bibtex_content)
-        if publications:
+    if step3_data and (step3_data.bibtex_content or step3_data.manual_publications):
+        publications = parse_bibtex(step3_data.bibtex_content) if step3_data.bibtex_content else []
+        if publications or step3_data.manual_publications:
             post_id_counter += 1
-            pub_html = _build_publications_html(publications)
+            pub_html = _build_publications_html(publications, step3_data.manual_publications)
             xml_lines.extend(_create_page_xml(user, 'Publications', pub_html, post_id_counter))
     
     # Create Gallery page
@@ -336,17 +346,24 @@ def _build_homepage_content(step1_data, step2_data, profile_picture_post_id=None
     return '\n'.join(content_parts)
 
 
-def _build_publications_html(publications):
+def _build_publications_html(publications, manual_publications=None):
     """Build HTML content for publications page"""
     content_parts = ['<!-- wp:heading -->\n<h2>Publications</h2>\n<!-- /wp:heading -->']
     
-    if not publications:
+    all_pubs = list(publications) if publications else []
+    
+    # Add manual publications
+    if manual_publications:
+        for manual_pub in manual_publications:
+            pub_dict = manual_pub.to_dict()
+            all_pubs.append(pub_dict)
+    
+    if not all_pubs:
         content_parts.append('<!-- wp:paragraph -->\n<p>No publications listed.</p>\n<!-- /wp:paragraph -->')
         return '\n'.join(content_parts)
     
     content_parts.append('<!-- wp:list -->\n<ol>')
-    for pub in publications:
-        from utils import format_publication_html
+    for pub in all_pubs:
         formatted = format_publication_html(pub)
         content_parts.append(f'<li>{formatted}</li>')
     content_parts.append('</ol>\n<!-- /wp:list -->')
