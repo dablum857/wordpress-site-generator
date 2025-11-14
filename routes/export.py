@@ -27,117 +27,127 @@ def export_routes(bp):
         """Preview the generated content before download"""
         user = User.query.get(session['user_id'])
         site = WordPressSite.query.get_or_404(site_id)
-        
+    
         # Verify user owns this site
         if site.user_id != user.id:
             flash('You do not have permission to access this site.', 'error')
             return redirect(url_for('index'))
-        
+    
         # Collect all data
         step1_data = site.step1_data
         step2_data = site.step2_data
         step3_data = site.step3_data
         step4_data = site.step4_data
-        
+    
         # Check if all required steps are complete
         if not step1_data or not step2_data:
             flash('Please complete at least Steps 1 and 2 before previewing.', 'warning')
             return redirect(url_for('wizard.step', site_id=site.id, step=1))
-        
-        # Parse publications
-        publications = []
+    
+        # Parse BibTeX publications
+        bibtex_publications = []
         if step3_data and step3_data.bibtex_content:
             try:
-                publications = parse_bibtex(step3_data.bibtex_content)
+                bibtex_publications = parse_bibtex(step3_data.bibtex_content)
             except Exception as e:
                 print(f"Error parsing BibTeX: {e}")
-                publications = []
-        
+                bibtex_publications = []
+    
         # Get manual publications
         manual_publications = []
         if step3_data:
-            manual_publications = step3_data.manual_publications
-        
+            manual_publications = list(step3_data.manual_publications)
+    
+        # Combine all publications
+        all_publications = bibtex_publications + manual_publications
+    
         # Get gallery images
         gallery_images = []
         if step4_data:
             gallery_images = step4_data.get_gallery_images()
-        
+    
         return render_template('wizard/preview.html',
                              site=site,
                              step1_data=step1_data,
                              step2_data=step2_data,
                              step3_data=step3_data,
                              step4_data=step4_data,
-                             publications=publications,
+                             publications=bibtex_publications,
                              manual_publications=manual_publications,
+                             all_publications=all_publications,
                              gallery_images=gallery_images)
-    
-    
+   
     @bp.route('/generate/<int:site_id>')
     @require_login
     def generate(site_id):
         """Generate the WXR file and show download page"""
         user = User.query.get(session['user_id'])
         site = WordPressSite.query.get_or_404(site_id)
-        
+    
         # Verify user owns this site
         if site.user_id != user.id:
             flash('You do not have permission to access this site.', 'error')
             return redirect(url_for('index'))
-        
+    
         # Collect all data
         step1_data = site.step1_data
         step2_data = site.step2_data
         step3_data = site.step3_data
         step4_data = site.step4_data
-        
+    
         # Check if all required steps are complete
         if not step1_data or not step2_data:
             flash('Please complete at least Steps 1 and 2 before generating.', 'warning')
             return redirect(url_for('wizard.step', site_id=site.id, step=1))
-        
+    
         # Generate WXR file
         try:
             wxr_content = _generate_wxr_content(
                 user, site, step1_data, step2_data, step3_data, step4_data,
                 current_app.config['UPLOAD_FOLDER']
             )
-            
+    
             # Create filename
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             filename = f"wordpress_export_{site.id}_{timestamp}.wxr"
-            
+    
             # Store in session for download
             session['wxr_data'] = wxr_content
             session['wxr_filename'] = filename
-            
-            # Parse publications and gallery for display
-            publications = []
+    
+            # Parse BibTeX publications
+            bibtex_publications = []
             if step3_data and step3_data.bibtex_content:
                 try:
-                    publications = parse_bibtex(step3_data.bibtex_content)
+                    bibtex_publications = parse_bibtex(step3_data.bibtex_content)
                 except Exception as e:
                     print(f"Error parsing BibTeX: {e}")
-                    publications = []
-            
+                    bibtex_publications = []
+    
+            # Get manual publications
             manual_publications = []
             if step3_data:
-                manual_publications = step3_data.manual_publications
-            
+                manual_publications = list(step3_data.manual_publications)
+    
+            # Combine all publications
+            all_publications = bibtex_publications + manual_publications
+    
             gallery_images = []
             if step4_data:
                 gallery_images = step4_data.get_gallery_images()
-            
+    
             return render_template('wizard/download.html',
                                  site=site,
                                  filename=filename,
-                                 has_publications=bool(publications or manual_publications),
-                                 has_gallery=bool(gallery_images))
-        
+                                 has_publications=bool(all_publications),
+                                 publication_count=len(all_publications),
+                                 has_gallery=bool(gallery_images),
+                                 gallery_count=len(gallery_images))
+    
         except Exception as e:
             flash(f'Error generating WXR file: {str(e)}', 'error')
             return redirect(url_for('export.preview', site_id=site.id))
+    
     
     
     @bp.route('/download/<int:site_id>')

@@ -4,163 +4,142 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-12">
-        <!-- Step Indicator -->
-        <div class="step-indicator mb-4">
-            <div class="step completed">
-                <div class="h5">1</div>
-                <small>Personal Info</small>
+    <div class="col-md-10 offset-md-1">
+        <h1>Site Preview</h1>
+        <p class="lead">Review your site content below before generating the WordPress export file.</p>
+
+        <!-- Home Page Preview -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">📄 Home Page</h4>
             </div>
-            <div class="step completed">
-                <div class="h5">2</div>
-                <small>Biography</small>
-            </div>
-            <div class="step completed">
-                <div class="h5">3</div>
-                <small>Publications</small>
-            </div>
-            <div class="step completed">
-                <div class="h5">4</div>
-                <small>Gallery</small>
-            </div>
-            <div class="step active">
-                <div class="h5">5</div>
-                <small>Preview</small>
+            <div class="card-body">
+                {% if step1_data %}
+                    <h3>{{ step1_data.title_role }}</h3>
+                    <div style="background-color: #f5f5f5; padding: 15px; margin: 15px 0; border-radius: 5px;">
+                        {% if step1_data.department %}
+                            <p><strong>Department:</strong> {{ step1_data.department }}</p>
+                        {% endif %}
+                        {% if step1_data.field_of_study %}
+                            <p><strong>Field of Study:</strong> {{ step1_data.field_of_study }}</p>
+                        {% endif %}
+                        {% if step1_data.email %}
+                            <p><strong>Email:</strong> <a href="mailto:{{ step1_data.email }}">{{ step1_data.email }}</a></p>
+                        {% endif %}
+                        {% if step1_data.office_address %}
+                            <p><strong>Office:</strong> {{ step1_data.office_address }}</p>
+                        {% endif %}
+                        {% if step1_data.phone_number %}
+                            <p><strong>Phone:</strong> {{ step1_data.phone_number }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if step2_data %}
+                    <h4>About</h4>
+                    <p>{{ step2_data.biography }}</p>
+                {% endif %}
             </div>
         </div>
 
-        <h1>Preview Your WordPress Site</h1>
-        <p class="lead">Review the content that will be generated for your WordPress site.</p>
+        <!-- Publications Preview -->
+        {% if all_publications %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">📚 Publications ({{ all_publications|length }})</h4>
+                </div>
+                <div class="card-body">
+                    <ol>
+                        {% for pub in all_publications %}
+                            <li>
+                                {% if pub is mapping %}
+                                    <!-- BibTeX publication (dictionary) -->
+                                    <strong>{{ pub.get('title', 'Untitled') }}</strong><br>
+                                    {% if pub.get('author') %}
+                                        <em>{{ pub.get('author') }}</em><br>
+                                    {% endif %}
+                                    {% if pub.get('journal') %}
+                                        {{ pub.get('journal') }}
+                                    {% endif %}
+                                    {% if pub.get('year') %}
+                                        ({{ pub.get('year') }})
+                                    {% endif %}
+                                    {% if pub.get('doi') %}
+                                        <a href="https://doi.org/{{ pub.get('doi') }}" target="_blank" class="btn btn-sm btn-link">DOI</a>
+                                    {% endif %}
+                                    {% if pub.get('url') %}
+                                        <a href="{{ pub.get('url') }}" target="_blank" class="btn btn-sm btn-link">Link</a>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Manual publication (ManualPublication object) -->
+                                    <strong>{{ pub.title }}</strong><br>
+                                    <em>{{ pub.author }}</em><br>
+                                    {% if pub.journal_or_booktitle %}
+                                        {{ pub.journal_or_booktitle }}
+                                    {% endif %}
+                                    {% if pub.publication_year %}
+                                        ({{ pub.publication_year }})
+                                    {% endif %}
+                                    {% if pub.publisher %}
+                                        {{ pub.publisher }}<br>
+                                    {% endif %}
+                                    {% if pub.doi %}
+                                        <a href="https://doi.org/{{ pub.doi }}" target="_blank" class="btn btn-sm btn-link">DOI</a>
+                                    {% endif %}
+                                    {% if pub.url %}
+                                        <a href="{{ pub.url }}" target="_blank" class="btn btn-sm btn-link">Link</a>
+                                    {% endif %}
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ol>
+                </div>
+            </div>
+        {% endif %}
 
-        <ul class="nav nav-tabs mb-3" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
-                    Home Page
-                </button>
-            </li>
-            {% if publications %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="publications-tab" data-bs-toggle="tab" data-bs-target="#publications" type="button" role="tab" aria-controls="publications" aria-selected="false">
-                        Publications
-                    </button>
-                </li>
-            {% endif %}
-            {% if gallery_images %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab" aria-controls="gallery" aria-selected="false">
-                        Gallery
-                    </button>
-                </li>
-            {% endif %}
-        </ul>
-
-        <div class="tab-content">
-            <!-- Home Page Tab -->
-            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0">Home Page Preview</h5>
+        <!-- Gallery Preview -->
+        {% if gallery_images %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">🖼️ Gallery ({{ gallery_images|length }} images)</h4>
+                </div>
+                <div class="card-body">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        {% for img in gallery_images %}
+                            <div>
+                                <img src="/uploads/{{ site.id }}/{{ img }}" alt="Gallery Image" style="width: 100%; height: 200px; object-fit: cover; border-radius: 5px;" />
+                                <small class="text-muted d-block mt-2">{{ img }}</small>
+                            </div>
+                        {% endfor %}
                     </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Summary Stats -->
+        <div class="row mt-4 mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
                     <div class="card-body">
-                        {% if step1_data.profile_picture %}
-                            <div class="text-center mb-4">
-                                <img src="/uploads/{{ site.id }}/{{ step1_data.profile_picture }}" alt="Profile Picture" style="max-width: 250px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            </div>
-                        {% endif %}
-
-                        {% if step1_data.title_role %}
-                            <h2>{{ step1_data.title_role }}</h2>
-                        {% endif %}
-
-                        <div class="contact-info my-4 p-3 bg-light rounded">
-                            {% if step1_data.department %}
-                                <p><strong>Department:</strong> {{ step1_data.department }}</p>
-                            {% endif %}
-                            {% if step1_data.field_of_study %}
-                                <p><strong>Field of Study:</strong> {{ step1_data.field_of_study }}</p>
-                            {% endif %}
-                            {% if step1_data.email %}
-                                <p><strong>Email:</strong> <a href="mailto:{{ step1_data.email }}">{{ step1_data.email }}</a></p>
-                            {% endif %}
-                            {% if step1_data.office_address %}
-                                <p><strong>Office:</strong> {{ step1_data.office_address }}</p>
-                            {% endif %}
-                            {% if step1_data.phone_number %}
-                                <p><strong>Phone:</strong> {{ step1_data.phone_number }}</p>
-                            {% endif %}
-                        </div>
-
-                        {% if step2_data.biography %}
-                            <h3>About</h3>
-                            <p>{{ step2_data.biography }}</p>
-                        {% endif %}
+                        <h5 class="card-title">📋 Content</h5>
+                        <p class="mb-0">
+                            <span class="badge bg-primary">Home</span>
+                            {% if all_publications %}<span class="badge bg-success">{{ all_publications|length }} Publications</span>{% endif %}
+                            {% if gallery_images %}<span class="badge bg-info">{{ gallery_images|length }} Images</span>{% endif %}
+                        </p>
                     </div>
                 </div>
-            </div>
-
-            <!-- Publications Tab -->
-            {% if publications %}
-                <div class="tab-pane fade" id="publications" role="tabpanel" aria-labelledby="publications-tab">
-                    <div class="card">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0">Publications Page Preview</h5>
-                        </div>
-                        <div class="card-body">
-                            <h2>Publications</h2>
-                            <ol>
-                                {% for pub in publications %}
-                                    <li>
-                                        {% if pub.get('author') %}{{ pub['author'] }}.{% endif %}
-                                        {% if pub.get('title') %} "{{ pub['title'] }}."{% endif %}
-                                        {% if pub.get('journal') %} <em>{{ pub['journal'] }}</em>{% elif pub.get('booktitle') %} In <em>{{ pub['booktitle'] }}</em>{% endif %}
-                                        {% if pub.get('publisher') %} {{ pub['publisher'] }}{% endif %}
-                                        {% if pub.get('year') %} ({{ pub['year'] }}){% endif %}
-                                        {% if pub.get('doi') %} <a href="https://doi.org/{{ pub['doi'] }}" target="_blank">DOI</a>{% elif pub.get('url') %} <a href="{{ pub['url'] }}" target="_blank">Link</a>{% endif %}
-                                    </li>
-                                {% endfor %}
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-
-            <!-- Gallery Tab -->
-            {% if gallery_images %}
-                <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
-                    <div class="card">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0">Gallery Page Preview</h5>
-                        </div>
-                        <div class="card-body">
-                            <h2>Gallery</h2>
-                            <div class="row">
-                                {% for img in gallery_images %}
-                                    <div class="col-md-4 mb-3">
-                                        <img src="/uploads/{{ site.id }}/{{ img }}" alt="Gallery Image" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-
-        <div class="mt-4">
-            <div class="alert alert-info">
-                <strong>What happens next:</strong>
-                <p class="mb-0">Click "Generate & Download WXR File" to create your WordPress import file. You will then be able to download it and import it into your WordPress site.</p>
             </div>
         </div>
 
-        <div class="d-flex gap-2 justify-content-between">
+        <!-- Action Buttons -->
+        <div class="d-flex gap-2 justify-content-between mt-4 mb-4">
             <div>
-                <a href="/wizard/{{ site.id }}/step/4" class="btn btn-secondary">Back to Edit</a>
+                <a href="/wizard/{{ site.id }}/step/4" class="btn btn-secondary">Back to Step 4</a>
             </div>
             <div>
-                <a href="/export/generate/{{ site.id }}" class="btn btn-success btn-lg">
-                    Generate & Download WXR File
-                </a>
+                <a href="/export/preview/{{ site.id }}" class="btn btn-outline-primary">Refresh Preview</a>
+                <a href="/export/generate/{{ site.id }}" class="btn btn-success btn-lg">Generate & Download WXR</a>
             </div>
         </div>
     </div>
