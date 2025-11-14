@@ -116,6 +116,57 @@ def wizard_routes(bp):
         return redirect(url_for('wizard.step', site_id=site.id, step=3))
 
 
+    @bp.route('/<int:site_id>/publication/<int:pub_id>/edit', methods=['GET', 'POST'])
+    @require_login
+    def edit_publication(site_id, pub_id):
+        """Edit a manual publication"""
+        from forms import EditManualPublicationForm
+        
+        user = User.query.get(session['user_id'])
+        site = WordPressSite.query.get_or_404(site_id)
+        
+        if site.user_id != user.id:
+            flash('You do not have permission to access this site.', 'error')
+            return redirect(url_for('index'))
+        
+        publication = ManualPublication.query.get_or_404(pub_id)
+        
+        # Verify publication belongs to this site
+        if publication.step3.site_id != site.id:
+            flash('You do not have permission to edit this publication.', 'error')
+            return redirect(url_for('index'))
+        
+        form = EditManualPublicationForm()
+        
+        if request.method == 'GET':
+            form.author.data = publication.author
+            form.title.data = publication.title
+            form.publication_year.data = publication.publication_year
+            form.journal_or_booktitle.data = publication.journal_or_booktitle
+            form.publisher.data = publication.publisher
+            form.doi.data = publication.doi
+            form.url.data = publication.url
+        
+        if form.validate_on_submit():
+            publication.author = form.author.data
+            publication.title = form.title.data
+            publication.publication_year = form.publication_year.data
+            publication.journal_or_booktitle = form.journal_or_booktitle.data
+            publication.publisher = form.publisher.data
+            publication.doi = form.doi.data
+            publication.url = form.url.data
+            
+            db.session.commit()
+            flash('Publication updated successfully!', 'success')
+            return redirect(url_for('wizard.step', site_id=site.id, step=3))
+        
+        return render_template(
+            'wizard/edit_publication.html',
+            form=form,
+            site=site,
+            publication=publication
+        )
+
 def _handle_step1(site, user):
     """Handle Step 1: Personal Information"""
     env_data = get_environment_user_data()

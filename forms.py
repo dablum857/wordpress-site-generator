@@ -122,3 +122,35 @@ class CreateSiteForm(FlaskForm):
         Length(max=255)
     ])
     submit = SubmitField('Create New Site')
+
+class EditManualPublicationForm(FlaskForm):
+    """Form for editing a manual publication"""
+    author = StringField('Author(s)', validators=[
+        DataRequired(message='Author is required'),
+        Length(max=500)
+    ])
+    title = StringField('Title', validators=[
+        DataRequired(message='Title is required'),
+        Length(max=500)
+    ])
+    publication_year = StringField('Year', validators=[
+        Optional(),
+        Length(max=4)
+    ])
+    journal_or_booktitle = StringField('Journal/Booktitle', validators=[
+        Optional(),
+        Length(max=500)
+    ])
+    publisher = StringField('Publisher', validators=[
+        Optional(),
+        Length(max=500)
+    ])
+    doi = StringField('DOI (Optional)', validators=[
+        Optional(),
+        Length(max=100)
+    ])
+    url = StringField('URL (Optional)', validators=[
+        Optional(),
+        Length(max=500)
+    ])
+    submit = SubmitField('Update Publication')
