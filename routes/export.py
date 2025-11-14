@@ -305,50 +305,64 @@ def _create_page_xml(user, title, content, post_id):
 
 
 def _build_homepage_content(step1_data, step2_data, profile_picture_post_id=None):
-    """Build HTML content for homepage"""
+    """Build HTML content for homepage using Gutenberg blocks"""
     content_parts = []
     
     # Profile picture if available
     if profile_picture_post_id:
-        content_parts.append(
-            f'<!-- wp:image {{"id":{profile_picture_post_id},"align":"center","width":300,"height":300}} -->\n'
-            f'<figure class="wp-block-image aligncenter" style="width:300px;height:300px;"><img src="https://example.com/uploads/profile.jpg" alt="Profile Picture" class="wp-image-{profile_picture_post_id}" width="300" height="300" /></figure>\n'
-            f'<!-- /wp:image -->'
-        )
+        content_parts.append(f'<!-- wp:image {{"id":{profile_picture_post_id},"sizeSlug":"large","linkDestination":"none"}} -->')
+        content_parts.append('<figure class="wp-block-image size-large"><img src="https://example.com/uploads/profile.jpg" alt="Profile Picture" class="wp-image-{}" /></figure>'.format(profile_picture_post_id))
+        content_parts.append('<!-- /wp:image -->')
+        content_parts.append('')
     
     # Title/Role
     if step1_data.title_role:
-        content_parts.append(f'<!-- wp:heading -->\n<h2>{_escape_xml(step1_data.title_role)}</h2>\n<!-- /wp:heading -->')
+        content_parts.append('<!-- wp:heading {"level":2} -->')
+        content_parts.append('<h2 class="wp-block-heading">{}</h2>'.format(_escape_xml(step1_data.title_role)))
+        content_parts.append('<!-- /wp:heading -->')
+        content_parts.append('')
     
     # Contact info section
     contact_parts = []
     if step1_data.department:
-        contact_parts.append(f'<strong>Department:</strong> {_escape_xml(step1_data.department)}')
+        contact_parts.append('<strong>Department:</strong> {}'.format(_escape_xml(step1_data.department)))
     if step1_data.field_of_study:
-        contact_parts.append(f'<strong>Field of Study:</strong> {_escape_xml(step1_data.field_of_study)}')
+        contact_parts.append('<strong>Field of Study:</strong> {}'.format(_escape_xml(step1_data.field_of_study)))
     if step1_data.email:
-        contact_parts.append(f'<strong>Email:</strong> <a href="mailto:{_escape_xml(step1_data.email)}">{_escape_xml(step1_data.email)}</a>')
+        contact_parts.append('<strong>Email:</strong> <a href="mailto:{}">{}</a>'.format(_escape_xml(step1_data.email), _escape_xml(step1_data.email)))
     if step1_data.office_address:
-        contact_parts.append(f'<strong>Office:</strong> {_escape_xml(step1_data.office_address)}')
+        contact_parts.append('<strong>Office:</strong> {}'.format(_escape_xml(step1_data.office_address)))
     if step1_data.phone_number:
-        contact_parts.append(f'<strong>Phone:</strong> {_escape_xml(step1_data.phone_number)}')
+        contact_parts.append('<strong>Phone:</strong> {}'.format(_escape_xml(step1_data.phone_number)))
     
     if contact_parts:
         content_parts.append('<!-- wp:paragraph -->')
-        content_parts.append('<p>' + '<br>'.join(contact_parts) + '</p>')
+        content_parts.append('<p class="wp-block-paragraph">{}</p>'.format('<br />'.join(contact_parts)))
         content_parts.append('<!-- /wp:paragraph -->')
+        content_parts.append('')
     
     # Biography
     if step2_data and step2_data.biography:
-        content_parts.append('<!-- wp:heading -->\n<h3>About</h3>\n<!-- /wp:heading -->')
-        content_parts.append(f'<!-- wp:paragraph -->\n<p>{_escape_xml(step2_data.biography)}</p>\n<!-- /wp:paragraph -->')
+        content_parts.append('<!-- wp:heading {"level":3} -->')
+        content_parts.append('<h3 class="wp-block-heading">About</h3>')
+        content_parts.append('<!-- /wp:heading -->')
+        content_parts.append('')
+        content_parts.append('<!-- wp:paragraph -->')
+        content_parts.append('<p class="wp-block-paragraph">{}</p>'.format(_escape_xml(step2_data.biography)))
+        content_parts.append('<!-- /wp:paragraph -->')
     
     return '\n'.join(content_parts)
 
 
 def _build_publications_html(publications, manual_publications=None):
-    """Build HTML content for publications page"""
-    content_parts = ['<!-- wp:heading -->\n<h2>Publications</h2>\n<!-- /wp:heading -->']
+    """Build HTML content for publications page using Gutenberg blocks"""
+    content_parts = []
+    
+    # Heading
+    content_parts.append('<!-- wp:heading {"level":2} -->')
+    content_parts.append('<h2 class="wp-block-heading">Publications</h2>')
+    content_parts.append('<!-- /wp:heading -->')
+    content_parts.append('')
     
     all_pubs = list(publications) if publications else []
     
@@ -359,32 +373,52 @@ def _build_publications_html(publications, manual_publications=None):
             all_pubs.append(pub_dict)
     
     if not all_pubs:
-        content_parts.append('<!-- wp:paragraph -->\n<p>No publications listed.</p>\n<!-- /wp:paragraph -->')
+        content_parts.append('<!-- wp:paragraph -->')
+        content_parts.append('<p class="wp-block-paragraph">No publications listed.</p>')
+        content_parts.append('<!-- /wp:paragraph -->')
         return '\n'.join(content_parts)
     
-    content_parts.append('<!-- wp:list -->\n<ol>')
+    # Build list
+    content_parts.append('<!-- wp:list -->')
+    content_parts.append('<ol class="wp-block-list">')
+    
     for pub in all_pubs:
         formatted = format_publication_html(pub)
-        content_parts.append(f'<li>{formatted}</li>')
-    content_parts.append('</ol>\n<!-- /wp:list -->')
+        content_parts.append('<li>{}</li>'.format(formatted))
+    
+    content_parts.append('</ol>')
+    content_parts.append('<!-- /wp:list -->')
     
     return '\n'.join(content_parts)
 
 
 def _build_gallery_html(gallery_post_ids):
-    """Build HTML content for gallery page"""
-    content_parts = ['<!-- wp:heading -->\n<h2>Gallery</h2>\n<!-- /wp:heading -->']
+    """Build HTML content for gallery page using Gutenberg blocks"""
+    content_parts = []
     
-    content_parts.append('<!-- wp:gallery {"ids":[' + ','.join(str(id) for id in gallery_post_ids) + ']} -->')
-    content_parts.append('<figure class="wp-block-gallery has-nested-images columns-default is-cropped">')
+    # Heading
+    content_parts.append('<!-- wp:heading {"level":2} -->')
+    content_parts.append('<h2 class="wp-block-heading">Gallery</h2>')
+    content_parts.append('<!-- /wp:heading -->')
+    content_parts.append('')
+    
+    # Gallery block with proper JSON
+    ids_string = ','.join(str(id) for id in gallery_post_ids)
+    gallery_json = '{{"ids":[{}],"columns":3,"size":"large"}}'.format(ids_string)
+    
+    content_parts.append('<!-- wp:gallery {} -->'.format(gallery_json))
+    content_parts.append('<figure class="wp-block-gallery has-nested-images columns-3 is-cropped">')
     content_parts.append('<ul class="blocks-gallery-grid">')
     
     for post_id in gallery_post_ids:
-        content_parts.append(
-            f'<li class="blocks-gallery-item"><figure><img src="https://example.com/uploads/image{post_id}.jpg" alt="" data-id="{post_id}" data-full-url="https://example.com/uploads/image{post_id}.jpg" data-link="https://example.com/?p={post_id}" class="wp-image-{post_id}" /></figure></li>'
-        )
+        content_parts.append('<li class="blocks-gallery-item">')
+        content_parts.append('<figure>')
+        content_parts.append('<img src="https://example.com/uploads/image{}.jpg" alt="" class="wp-image-{}" />'.format(post_id, post_id))
+        content_parts.append('</figure>')
+        content_parts.append('</li>')
     
-    content_parts.append('</ul></figure>')
+    content_parts.append('</ul>')
+    content_parts.append('</figure>')
     content_parts.append('<!-- /wp:gallery -->')
     
     return '\n'.join(content_parts)
